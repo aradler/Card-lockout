@@ -10,6 +10,14 @@ CREATE TABLE users (
 	last_name VARCHAR(50) NOT NULL
 );
 
+-- keeps track of equipment groups for giving user permissions
+CREATE TABLE equipment_groups (
+	id SERIAL PRIMARY KEY,
+	type VARCHAR(50) NOT NULL UNIQUE,
+	description VARCHAR(200) NOT NULL,
+	active BIT(1) NOT NULL DEFAULT '1'
+);
+
 -- keeps track of which card readers users cards will work on
 CREATE TABLE memberships (
 	id SERIAL PRIMARY KEY,
@@ -41,14 +49,6 @@ CREATE TABLE card_activity (
 CREATE TABLE card_readers (
 	id SERIAL PRIMARY KEY,
 	type VARCHAR(50) NOT NULL REFERENCES equipment_groups(type),
-	description VARCHAR(200) NOT NULL,
-	active BIT(1) NOT NULL DEFAULT '1'
-);
-
--- keeps track of equipment groups for giving user permissions
-CREATE TABLE equipment_groups (
-	id SERIAL PRIMARY KEY,
-	type VARCHAR(50) NOT NULL UNIQUE,
 	description VARCHAR(200) NOT NULL,
 	active BIT(1) NOT NULL DEFAULT '1'
 );
