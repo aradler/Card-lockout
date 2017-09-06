@@ -16,7 +16,7 @@ CREATE TABLE memberships (
 	uw_id INT NOT NULL REFERENCES users(uw_id),
 	type VARCHAR(50) NOT NULL REFERENCES equipment_groups(type),
 	join_date INT NOT NULL,
-	expiration_date INT NOT NULL
+	expiration_date INT
 );
 
 -- keeps track of added bans added for users and which card reader type it applies to
@@ -33,7 +33,8 @@ CREATE TABLE card_activity (
 	id SERIAL PRIMARY KEY,
 	uw_id INT NOT NULL,
 	type VARCHAR(50) NOT NULL REFERENCES equipment_groups(type),
-	date INT NOT NULL
+	date INT NOT NULL,
+	pass BIT(1) NOT NULL DEFAULT '0'
 );
 
 -- keeps track of each card reader by id and its type	
