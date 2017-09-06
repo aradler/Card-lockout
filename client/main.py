@@ -15,7 +15,7 @@ def runLoop( config ):
 		print( 'The last input was ' + cardNumber )
 
 		try:
-			res = queryServer( cardNumber, config )
+			res = requestAuthorization( cardNumber, config )
 		except requests.exceptions.Timeout:
 			print( "Server timeout!" )
 			continue
@@ -25,10 +25,11 @@ def runLoop( config ):
 			pass
 
 
-def queryServer( cardNumber, config ):
+def requestAuthorization( cardNumber, config ):
 	url = 'http://' + str( config['serverAddress'] ) + ':' + str( config['serverPort'] )
+	path = '/users/checkAuthorization'
 
-	req = requests.get( url, {
+	req = requests.get( url + path, {
 		'cardNumber': cardNumber,
 		'machineID': config['machineID'],
 		'machineType': config['machineType']
