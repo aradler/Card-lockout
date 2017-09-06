@@ -113,8 +113,8 @@ def addUser():
 # Card terminal interface routes #
 ##################################
 
-@app.route( '/users/checkAuthorization', methods=['GET'] )
-def checkUserAuthorization():
+@app.route( '/users/swipe', methods=['GET'] )
+def checkUserAuthorization():]
 	return request.path
 
 
