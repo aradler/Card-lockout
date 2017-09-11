@@ -11,9 +11,13 @@ import psycopg2
 # for generating JSON to send to the client
 import json
 
+from StudentDatabase import StudentDatabase
+
 
 # create the flask app
 app = Flask( __name__ )
+
+sdb = StudentDatabase( "host", "dbName", "user", "pass" )
 
 
 # a simple hello world route
@@ -55,8 +59,8 @@ def login():
 @app.route( '/users', methods=['GET'] )
 def users():
 	"""
-	This route will display the list of currently registered users, along with their authorizations, registration
-	dates, and other info.
+	This route will display the list of currently registered users, along with
+	their authorizations, registration dates, and other info.
 	"""
 	return render_template(
 		"main.html",
@@ -72,6 +76,14 @@ def newUser():
 	"""
 	Accepts a request to add a user to the database.
 	"""
+
+	sdb.add_user(
+		request.form['card_id'],
+		request.form['uw_id'],
+		request.form['uw_netid'],
+		request.form['first_name'],
+		request.form['last_name'] )
+
 	return request.path
 
 
@@ -114,7 +126,7 @@ def addUser():
 ##################################
 
 @app.route( '/users/swipe', methods=['GET'] )
-def checkUserAuthorization():]
+def checkUserAuthorization():
 	return request.path
 
 
