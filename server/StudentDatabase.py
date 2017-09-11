@@ -12,8 +12,9 @@ import time
 # sdb = StudentDatabase( "host", "db_name", "user", "pass" )
 # sdb.add_user( "cardID", "ID", "netID", "Name", "Lastname", "oldid" )
 
+
 class StudentDatabase:
-    def __init__ (self, host, db_name, user, password):
+    def __init__(self, host, db_name, user, password):
         #TODO: add password field to connection after successful database connection
         self.host = host
         self.db_name = db_name
@@ -25,14 +26,23 @@ class StudentDatabase:
             self.conn = psycopg2.connect("host={} dbname={} user={}".format(self.host, self.db_name, self.user))
             # open a cursor to perform database operations
         except:
-            print ("I am unable to connect to the database. \n Please supply parameters in this format: StudentDatabase.StudentDatabase(self, host, db_name, user, password)")
+            print("I am unable to connect to the database. \n Please supply parameters in this format: StudentDatabase.StudentDatabase(self, host, db_name, user, password)")
+
+    def __dbReq( self, stringReq ):
+        try:
+            cur = conn.cursor()
+            print( "Request made!" )
+            cur.execute( stringReq )
+            cur.close()
+        except Exception as e:
+            print( e )
 
     def get_init(self):
         return "{} {} {} {}".format(self.host, self.db_name, self.password, self.user)
 
     def add_user(self, card_id, uw_id, uw_netid, first_name, last_name):
         # searches table for existing users with any matching unique inputs, i.e. duplicates
-        cur.execute("SELECT * FROM users WHERE card_id={} OR uw_id={} OR uw_netid={{}}").format(str(self.card_id), str(self.uw_id), str(self.uw_netid))
+        self.__dbReq("SELECT * FROM users WHERE card_id={} OR uw_id={} OR uw_netid={{}}").format(str(self.card_id), str(self.uw_id), str(self.uw_netid))
         # add user to table if no duplicates are found
         if len(cur.fetchall()) == 0:
             cur.execute("INSERT INTO users (card_id, uw_id, uw_netid, first_name, last_name) VALUES({}, {}, {}, {}, {}").format(str(self.card_id), str(self.uw_id), str(self.uw_netid), str(self.first_name), str(self.last_name))
@@ -43,7 +53,7 @@ class StudentDatabase:
     # removing user from form input
     def remove_user(self, card_id, uw_id, uw_netid):
         # searches for user with a matching input
-        cur.execute("SELECT * FROM users WHERE card_id=%(card_id)s OR uw_id=%(uw_id)s OR uw_netid=%(uw_netid)s") % {'card_id': str(card_id), 'uw_id': str(uw_id), 'uw_netid': str(uw_netid)}
+        self.__dbReq("SELECT * FROM users WHERE card_id=%(card_id)s OR uw_id=%(uw_id)s OR uw_netid=%(uw_netid)s") % {'card_id': str(card_id), 'uw_id': str(uw_id), 'uw_netid': str(uw_netid)}
         # if a user is found, remove from table
         if len(cur.fetchall()) == 1:
             cur.execute("DELETE FROM users")
@@ -58,16 +68,16 @@ class StudentDatabase:
         cur.execute("SELECT id FROM users WHERE uw_id=%(uw_id)s") % {'uw_id': str(old_uw_id)}
         # if id is found update user entry
         if len(cur.fetchall()) == 1:
-           id = cur.fetchall()[0]
+            id = cur.fetchall()[0]
            cur.execute("UPDATE users SET card_id=%(card_id)s, uw_id=%(uw_id)s, uw_netid=%(uw_netid)s, first_name=%(first_name)s, last_name=%(last_name)s WHERE id=%(id)s") % {'card_id': str(card_id), 'uw_id': str(uw_id), 'uw_netid': str(uw_netid), 'first_name': str(firstname), 'last_name': str(last_name), 'id': str(id)}
         # error, no id found so no update
         else:
-             pass
+            pass
 
     # display all users
     def display_users():
         table = "<table>"
-        cur.execute("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='users'")
+        self.__dbReq("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='users'")
         header = cur.fetchall()
         for column in header:
             table += "<th>" + str(column[3]) + "</th>"
