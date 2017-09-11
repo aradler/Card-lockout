@@ -1,20 +1,16 @@
-from flask import Flask
-from flask import request
 import yaml
 import json
 import sql
 import psycopg2
 import time
 
-app = Flask( __name__ )
-
 # # connect to database makerspace
 # conn = psycopg2.connect("host=localhost dbname=makerspace user=postgres")
 # # open a cursor to perform database operations
 # cur = conn.cursor()
 
-# @app.route("/")
-# def welcome():
+# sdb = StudentDatabase( "host", "db_name", "user", "pass" )
+# sdb.add_user( "cardID", "ID", "netID", "Name", "Lastname", "oldid" )
 
 class StudentDatabase:
     def __init__ (self, host, db_name, user, password):
@@ -26,31 +22,14 @@ class StudentDatabase:
 
         try:
             # connect to database makerspace
-            conn = psycopg2.connect("host={} dbname={} user={}".format(self.host, self.db_name, self.user))
+            self.conn = psycopg2.connect("host={} dbname={} user={}".format(self.host, self.db_name, self.user))
             # open a cursor to perform database operations
-            cur = conn.cursor()
-            return cur
         except:
             print ("I am unable to connect to the database. \n Please supply parameters in this format: StudentDatabase.StudentDatabase(self, host, db_name, user, password)")
 
     def get_init(self):
         return "{} {} {} {}".format(self.host, self.db_name, self.password, self.user)
 
-class Users():
-    def __init__(self, card_id, uw_id, uw_netid, first_name, last_name, old_uw_id):
-        self.card_id = card_id
-        self.uw_id = uw_id
-        self.uw_netid = uw_netid
-        self.first_name = first_name
-        self.last_name = last_name
-        self.old_uw_id = old_uw_id
-
-        cur = input("please input your instantiation of the StudentDatabase object here: ")
-
-        StudentDatabase.Users(1234, 1234, 1234, "chuan-li", "chang", 1234)
-
-
-    # adding user from form input
     def add_user(self, card_id, uw_id, uw_netid, first_name, last_name):
         # searches table for existing users with any matching unique inputs, i.e. duplicates
         cur.execute("SELECT * FROM users WHERE card_id={} OR uw_id={} OR uw_netid={{}}").format(str(self.card_id), str(self.uw_id), str(self.uw_netid))
@@ -101,16 +80,6 @@ class Users():
             table += "</tr>"
         return table + "</table>"
 
-class Members():
-    def __init__ (self, card_id, type, expiration_date, start_date, end_date, date):
-        self.card_id = card_id
-        self.type = type
-        self.expiration_date = expiration_date
-        self.start_date = start_date
-        self.end_date = end_date
-        self.date = date
-
-
     # add membership to uw_id given card_id and type of membership
     # expiration_date is only required if it is a main_door membership
     def add_membership(card_id, type, expiration_date):
@@ -151,26 +120,6 @@ class Members():
     def remove_equipment_groups():
         pass
 
-    # checks card number for bans then for membership then if membership is expired
-    def card_swipe(card_id, card_reader):
-        # given card_reader id get equipment type from card_readers table
-        cur.execute("SELECT type FROM card_readers WHERE id=%(card_reader)s", {'card_reader': card_reader})
-        if cur.rowcount > 0:
-            type = cur.fetchall()[0][0]
-            # given user's card_id get user's uw_id from users table
-            cur.execute("SELECT uw_id FROM users WHERE card_id=%(card_id)s", {'card_id': card_id})
-            if cur.rowcount > 0:
-                uw_id = cur.fetchall()[0][0]
-                # search memberships table for uw_id and equipment type and if found return expiration_date
-                cur.execute("SELECT expiration_date FROM memberships WHERE uw_id=%(uw_id)s AND type=%(type)s ORDER BY expiration_date DESC", {'uw_id': uw_id, 'type': type})
-                if cur.rowcount > 0:
-                    expiration_date = cur.fetchall()[0][0]
-                    if expiration_date > time.time():
-                        return 'GJ YOU IN'
-                        # call write_card_activity()
-        else:
-            return 'U FAILED'
-
     # writes to table card_activity
     def write_card_activity(self, uw_id, type, date):
     #def write_card_activity(uw_id, type, date, pass='0'): doesn't work for Cody & Chuan
@@ -184,11 +133,34 @@ class Members():
     def show_trained_users(type):
         pass
 
-    if __name__ == '__main__':
-        # read and return a yaml file (called 'config.yaml' by default) and give it
-        # back as a dictionary
-        with open( 'config.yaml' ) as f:
-            config = yaml.load( f )
-
-        app.debug = True
-        app.run( host='0.0.0.0', port=config['serverPort'] )
+#
+#
+# class Members():
+#     def __init__ (self, card_id, type, expiration_date, start_date, end_date, date):
+#         self.card_id = card_id
+#         self.type = type
+#         self.expiration_date = expiration_date
+#         self.start_date = start_date
+#         self.end_date = end_date
+#         self.date = date
+#
+#
+#     # checks card number for bans then for membership then if membership is expired
+#     def card_swipe(card_id, card_reader):
+#         # given card_reader id get equipment type from card_readers table
+#         cur.execute("SELECT type FROM card_readers WHERE id=%(card_reader)s", {'card_reader': card_reader})
+#         if cur.rowcount > 0:
+#             type = cur.fetchall()[0][0]
+#             # given user's card_id get user's uw_id from users table
+#             cur.execute("SELECT uw_id FROM users WHERE card_id=%(card_id)s", {'card_id': card_id})
+#             if cur.rowcount > 0:
+#                 uw_id = cur.fetchall()[0][0]
+#                 # search memberships table for uw_id and equipment type and if found return expiration_date
+#                 cur.execute("SELECT expiration_date FROM memberships WHERE uw_id=%(uw_id)s AND type=%(type)s ORDER BY expiration_date DESC", {'uw_id': uw_id, 'type': type})
+#                 if cur.rowcount > 0:
+#                     expiration_date = cur.fetchall()[0][0]
+#                     if expiration_date > time.time():
+#                         return 'GJ YOU IN'
+#                         # call write_card_activity()
+#         else:
+#             return 'U FAILED'
