@@ -3,6 +3,7 @@ import json
 import sql
 import psycopg2
 import time
+import pprint
 
 
 # # connect to database makerspace
@@ -38,6 +39,10 @@ class StudentDatabase:
             cur = self.conn.cursor()
             print("Request made!")
             cur.execute(stringReq)
+            self.conn.commit()
+			# this is probably going to need to be changed
+            rows = cur.fetchall()
+            pprint.pprint(rows)
             cur.close()
         except Exception as e:
             print(e)
@@ -98,6 +103,9 @@ class StudentDatabase:
                 table += "<td>" + str(column) + "</td>"
             table += "</tr>"
         return table + "</table>"
+
+    def display_all_users(self):
+        self.__dbReq("SELECT * FROM users")
 
     # add membership to uw_id given card_id and type of membership
     # expiration_date is only required if it is a main_door membership
