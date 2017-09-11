@@ -4,6 +4,7 @@ import sql
 import psycopg2
 import time
 
+
 # # connect to database makerspace
 # conn = psycopg2.connect("host=localhost dbname=makerspace user=postgres")
 # # open a cursor to perform database operations
@@ -15,7 +16,7 @@ import time
 
 class StudentDatabase:
     def __init__(self, host, db_name, user, password):
-        #TODO: add password field to connection after successful database connection
+        # TODO: add password field to connection after successful database connection
         self.host = host
         self.db_name = db_name
         self.password = password
@@ -28,24 +29,32 @@ class StudentDatabase:
         except:
             print("I am unable to connect to the database. \n Please supply parameters in this format: StudentDatabase.StudentDatabase(self, host, db_name, user, password)")
 
-    def __dbReq( self, stringReq ):
+    def __dbReq(self, stringReq):
+        """
+        Handles creating a cursor, making a request, and closing said cursor.
+        """
+        # TODO: Add exception handling, do some loggingtry:
         try:
-            cur = conn.cursor()
-            print( "Request made!" )
-            cur.execute( stringReq )
+            cur = self.conn.cursor()
+            print("Request made!")
+            cur.execute(stringReq)
             cur.close()
         except Exception as e:
-            print( e )
+            print(e)
 
     def get_init(self):
         return "{} {} {} {}".format(self.host, self.db_name, self.password, self.user)
 
     def add_user(self, card_id, uw_id, uw_netid, first_name, last_name):
         # searches table for existing users with any matching unique inputs, i.e. duplicates
-        self.__dbReq("SELECT * FROM users WHERE card_id={} OR uw_id={} OR uw_netid={{}}").format(str(self.card_id), str(self.uw_id), str(self.uw_netid))
+        request = "SELECT * FROM users WHERE card_id={} OR uw_id={} OR uw_netid={}".format(str(card_id), str(uw_id), str(uw_netid))
+        print(request)
+        self.__dbReq(request)
         # add user to table if no duplicates are found
+        cur = self.conn.cursor()
         if len(cur.fetchall()) == 0:
-            cur.execute("INSERT INTO users (card_id, uw_id, uw_netid, first_name, last_name) VALUES({}, {}, {}, {}, {}").format(str(self.card_id), str(self.uw_id), str(self.uw_netid), str(self.first_name), str(self.last_name))
+            cur.close()
+            self.__dbReq("INSERT INTO users (card_id, uw_id, uw_netid, first_name, last_name) VALUES({}, {}, {}, {}, {}".format(str(card_id), str(uw_id), str(uw_netid), str(first_name), str(last_name)))
         # error, duplicates found
         else:
             pass
@@ -56,7 +65,7 @@ class StudentDatabase:
         self.__dbReq("SELECT * FROM users WHERE card_id=%(card_id)s OR uw_id=%(uw_id)s OR uw_netid=%(uw_netid)s") % {'card_id': str(card_id), 'uw_id': str(uw_id), 'uw_netid': str(uw_netid)}
         # if a user is found, remove from table
         if len(cur.fetchall()) == 1:
-            cur.execute("DELETE FROM users")
+            self.__dbReq("DELETE FROM users")
             # move deleted user to new table?
         # error, no user found matching inputs
         else:
@@ -65,11 +74,11 @@ class StudentDatabase:
     # editing user entry by form input
     def edit_user(self, old_uw_id, card_id, uw_id, uw_netid, first_name, last_name):
         # gets id of user entry matching
-        cur.execute("SELECT id FROM users WHERE uw_id=%(uw_id)s") % {'uw_id': str(old_uw_id)}
+        self.__dbReq("SELECT id FROM users WHERE uw_id=%(uw_id)s") % {'uw_id': str(old_uw_id)}
         # if id is found update user entry
         if len(cur.fetchall()) == 1:
             id = cur.fetchall()[0]
-           cur.execute("UPDATE users SET card_id=%(card_id)s, uw_id=%(uw_id)s, uw_netid=%(uw_netid)s, first_name=%(first_name)s, last_name=%(last_name)s WHERE id=%(id)s") % {'card_id': str(card_id), 'uw_id': str(uw_id), 'uw_netid': str(uw_netid), 'first_name': str(firstname), 'last_name': str(last_name), 'id': str(id)}
+            self.__dbReq("UPDATE users SET card_id=%(card_id)s, uw_id=%(uw_id)s, uw_netid=%(uw_netid)s, first_name=%(first_name)s, last_name=%(last_name)s WHERE id=%(id)s") % {'card_id': str(card_id), 'uw_id': str(uw_id), 'uw_netid': str(uw_netid), 'first_name': str(firstname), 'last_name': str(last_name), 'id': str(id)}
         # error, no id found so no update
         else:
             pass
@@ -81,7 +90,7 @@ class StudentDatabase:
         header = cur.fetchall()
         for column in header:
             table += "<th>" + str(column[3]) + "</th>"
-        cur.execute("SELECT * FROM users")
+        self.__dbReq("SELECT * FROM users")
         data = cur.fetchall()
         for row in data:
             table += "<tr>"
@@ -158,15 +167,15 @@ class StudentDatabase:
 #     # checks card number for bans then for membership then if membership is expired
 #     def card_swipe(card_id, card_reader):
 #         # given card_reader id get equipment type from card_readers table
-#         cur.execute("SELECT type FROM card_readers WHERE id=%(card_reader)s", {'card_reader': card_reader})
+#         self.__dbReq("SELECT type FROM card_readers WHERE id=%(card_reader)s", {'card_reader': card_reader})
 #         if cur.rowcount > 0:
 #             type = cur.fetchall()[0][0]
 #             # given user's card_id get user's uw_id from users table
-#             cur.execute("SELECT uw_id FROM users WHERE card_id=%(card_id)s", {'card_id': card_id})
+#             self.__dbReq("SELECT uw_id FROM users WHERE card_id=%(card_id)s", {'card_id': card_id})
 #             if cur.rowcount > 0:
 #                 uw_id = cur.fetchall()[0][0]
 #                 # search memberships table for uw_id and equipment type and if found return expiration_date
-#                 cur.execute("SELECT expiration_date FROM memberships WHERE uw_id=%(uw_id)s AND type=%(type)s ORDER BY expiration_date DESC", {'uw_id': uw_id, 'type': type})
+#                 self.__dbReq("SELECT expiration_date FROM memberships WHERE uw_id=%(uw_id)s AND type=%(type)s ORDER BY expiration_date DESC", {'uw_id': uw_id, 'type': type})
 #                 if cur.rowcount > 0:
 #                     expiration_date = cur.fetchall()[0][0]
 #                     if expiration_date > time.time():
