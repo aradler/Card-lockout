@@ -103,6 +103,14 @@ def deleteUser():
 	"""
 	Deletes a user from the database.
 	"""
+	try:
+		sdb.remove_user(
+			request.form['card_id'],
+			request.form['uw_id'],
+			request.form['uw_netid'] )
+		return render_template( "main.html", body="OK" )
+	except:
+		return render_template( "main.html", body="Error adding user" ), 500
 	return request.path
 
 
@@ -111,6 +119,7 @@ def authorizeUser():
 	"""
 	Adds an authorization to a specified user.
 	"""
+	
 	return request.path
 
 
