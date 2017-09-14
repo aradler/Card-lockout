@@ -34,34 +34,48 @@ class StudentDatabase:
         """
         Handles creating a cursor, making a request, and closing said cursor.
         """
-        # TODO: Add exception handling, do some loggingtry:
+        # TODO: Add exception handling, do some logging
         try:
             cur = self.conn.cursor()
             print("Request made!")
-            cur.execute(stringReq)
+            result = cur.execute(stringReq)
             self.conn.commit()
-			# this is probably going to need to be changed
-            rows = cur.fetchall()
-            pprint.pprint(rows)
             cur.close()
+            return result
         except Exception as e:
             print(e)
 
     def get_init(self):
         return "{} {} {} {}".format(self.host, self.db_name, self.password, self.user)
 
+    def user_exists(self, card_id, uw_id, uw_netid):
+        # cur = self.conn.cursor()
+        user_exists = self.__dbReq('SELECT * FROM users WHERE card_id=\'{}\' OR uw_id=\'{}\' OR uw_netid=\'{}\''.format(str(card_id), str(uw_id), str(uw_netid)))
+        # request = 'SELECT * FROM users WHERE card_id=\'{}\' OR uw_id=\'{}\' OR uw_netid=\'{}\''.format(str(card_id), str(uw_id), str(uw_netid))
+        # user_exists = cur.execute(request)
+        # cur.close()
+        return user_exists is not None # if true then user exists
+
+        #user_exists = cur.description[0][2]
+
     def add_user(self, card_id, uw_id, uw_netid, first_name, last_name):
         # searches table for existing users with any matching unique inputs, i.e. duplicates
-        request = "SELECT * FROM users WHERE card_id={} OR uw_id={} OR uw_netid={}".format(str(card_id), str(uw_id), str(uw_netid))
-        print(request)
-        self.__dbReq(request)
-        # add user to table if no duplicates are found
-        cur = self.conn.cursor()
-        if len(cur.fetchall()) == 0:
+        try:
+            # add this back later!
+            # request = "SELECT * FROM users WHERE card_id=\"{}\" OR uw_id=\"{}\" OR uw_netid=\"{}\"".format(str(card_id), str(uw_id), str(uw_netid))
+            # print(request)
+            # self.__dbReq(request)
+            # add user to table if no duplicates are found
+            if not self.user_exists(card_id, uw_id, uw_netid):
+            # if cur.description[0][2] is None:
+                print("didn't find user in database! now inserting user into database")
+                request = "INSERT INTO users (card_id, uw_id, uw_netid, first_name, last_name) VALUES(\"{}\", \"{}\", \"{}\", \"{}\", \"{}\"".format(str(card_id), str(uw_id), str(uw_netid), str(first_name), str(last_name))
+                cur = self.__dbReq(request)
+            for i in range(len(cur.description)):
+                print(cur.description[0][i])
             cur.close()
-            self.__dbReq("INSERT INTO users (card_id, uw_id, uw_netid, first_name, last_name) VALUES({}, {}, {}, {}, {}".format(str(card_id), str(uw_id), str(uw_netid), str(first_name), str(last_name)))
-        # error, duplicates found
-        else:
+        except Exception as e:
+            print(e)
             pass
 
     # removing user from form input
@@ -75,7 +89,6 @@ class StudentDatabase:
         # error, no user found matching inputs
         else:
             pass
-
     # editing user entry by form input
     def edit_user(self, old_uw_id, card_id, uw_id, uw_netid, first_name, last_name):
         # gets id of user entry matching
@@ -191,3 +204,6 @@ class StudentDatabase:
 #                         # call write_card_activity()
 #         else:
 #             return 'U FAILED'
+
+student = StudentDatabase("localhost", "postgres", "postgres", "1234")
+print(student.user_exists("1234", "1234", "431"))
