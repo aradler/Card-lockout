@@ -16,16 +16,18 @@ import pprint
 
 
 class StudentDatabase:
-    def __init__(self, host, db_name, user, password):
+    def __init__(self, host, db_name, user, password, port):
         # TODO: add password field to connection after successful database connection
         self.host = host
         self.db_name = db_name
-        self.password = password
         self.user = user
+        self.password = password
+        self.port = port
 
         try:
             # connect to database makerspace
-            self.conn = psycopg2.connect("host={} dbname={} user={}".format(self.host, self.db_name, self.user))
+            #TODO: add password field
+            self.conn = psycopg2.connect("host={} dbname={} user={} port={}".format(self.host, self.db_name, self.user, self.port))
             # open a cursor to perform database operations
         except:
             print("I am unable to connect to the database. \n Please supply parameters in this format: StudentDatabase.StudentDatabase(self, host, db_name, user, password)")
@@ -51,9 +53,6 @@ class StudentDatabase:
     def user_exists(self, card_id, uw_id, uw_netid):
         # cur = self.conn.cursor()
         user_exists = self.__dbReq('SELECT * FROM users WHERE card_id=\'{}\' OR uw_id=\'{}\' OR uw_netid=\'{}\''.format(str(card_id), str(uw_id), str(uw_netid)))
-        # request = 'SELECT * FROM users WHERE card_id=\'{}\' OR uw_id=\'{}\' OR uw_netid=\'{}\''.format(str(card_id), str(uw_id), str(uw_netid))
-        # user_exists = cur.execute(request)
-        # cur.close()
         return user_exists is not None # if true then user exists
 
         #user_exists = cur.description[0][2]
@@ -61,22 +60,12 @@ class StudentDatabase:
     def add_user(self, card_id, uw_id, uw_netid, first_name, last_name):
         # searches table for existing users with any matching unique inputs, i.e. duplicates
         try:
-            # add this back later!
-            # request = "SELECT * FROM users WHERE card_id=\"{}\" OR uw_id=\"{}\" OR uw_netid=\"{}\"".format(str(card_id), str(uw_id), str(uw_netid))
-            # print(request)
-            # self.__dbReq(request)
-            # add user to table if no duplicates are found
-            if not self.user_exists(card_id, uw_id, uw_netid):
-            # if cur.description[0][2] is None:
+            if not self.user_exists(card_id, uw_id, uw_netid):  # user does not exist
                 print("didn't find user in database! now inserting user into database")
-                request = "INSERT INTO users (card_id, uw_id, uw_netid, first_name, last_name) VALUES(\"{}\", \"{}\", \"{}\", \"{}\", \"{}\"".format(str(card_id), str(uw_id), str(uw_netid), str(first_name), str(last_name))
-                cur = self.__dbReq(request)
-            for i in range(len(cur.description)):
-                print(cur.description[0][i])
-            cur.close()
+                request = "INSERT INTO users (card_id, uw_id, uw_netid, first_name, last_name) VALUES(\'{}\', \'{}\', \'{}\', \'{}\', \'{}\'".format(str(card_id), str(uw_id), str(uw_netid), str(first_name), str(last_name))
+                self.__dbReq(request)
         except Exception as e:
             print(e)
-            pass
 
     # removing user from form input
     def remove_user(self, card_id, uw_id, uw_netid):
@@ -118,7 +107,7 @@ class StudentDatabase:
         return table + "</table>"
 
     def display_all_users(self):
-        self.__dbReq("SELECT * FROM users")
+        self.__dbReq("SELECT * FROM users;")
 
     # add membership to uw_id given card_id and type of membership
     # expiration_date is only required if it is a main_door membership
@@ -205,5 +194,7 @@ class StudentDatabase:
 #         else:
 #             return 'U FAILED'
 
-student = StudentDatabase("localhost", "postgres", "postgres", "1234")
-print(student.user_exists("1234", "1234", "431"))
+
+student = StudentDatabase("localhost", "postgres", "postgres", "1234", "2345")
+print(student.user_exists("16808028", "16808028", "16808028"))
+# student.add_user("1234", "1234", "431")
