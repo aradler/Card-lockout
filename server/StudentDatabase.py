@@ -41,7 +41,8 @@ class StudentDatabase:
             cur = self.conn.cursor()
             cur.execute(stringReq)
             try:
-                result = self.cur.fetchall()  # if not a fetch operation, this will fail.
+                result = cur.fetchall()  # if not a fetch operation, this will fail.
+                print("results fetched!")
             except:
                 result = None
                 pass
@@ -67,35 +68,47 @@ class StudentDatabase:
                 print("didn't find user in database! now inserting user into database")
                 request = "INSERT INTO users (card_id, uw_id, uw_netid, first_name, last_name) VALUES(\'{}\', \'{}\', \'{}\', \'{}\', \'{}\')".format(str(card_id), str(uw_id), str(uw_netid), str(first_name), str(last_name))
                 self.__dbReq(request)
+                return True
             else:
-                print("user exists!")
+                print("user already exists!")
+                return False
         except Exception as e:
             print(e)
 
     # removing user from form input
     def remove_user(self, card_id, uw_id, uw_netid):
-        # searches for user with a matching input
-        self.__dbReq("SELECT * FROM users WHERE card_id=%(card_id)s OR uw_id=%(uw_id)s OR uw_netid=%(uw_netid)s") % {'card_id': str(card_id), 'uw_id': str(uw_id), 'uw_netid': str(uw_netid)}
-        # if a user is found, remove from table
-        if len(cur.fetchall()) == 1:
-            self.__dbReq("DELETE FROM users")
-            # move deleted user to new table?
+        # if a user is found, remove them from the users table
+        if self.user_exists(card_id, uw_id, uw_netid):  # user exists
+            # TODO: move deleted user to new table?
+            print("found user in database! now deleting user from database...")
+            # TODO: decide if we need this to be an OR or an AND
+            self.__dbReq("DELETE FROM users WHERE card_id=\'{}\' OR uw_id=\'{}\' OR uw_netid=\'{}\'".format(str(card_id), str(uw_id), str(uw_netid)))
+            return True
         # error, no user found matching inputs
         else:
-            pass
+            print("didn't find user in database!")
+            return False
+
     # editing user entry by form input
     def edit_user(self, old_uw_id, card_id, uw_id, uw_netid, first_name, last_name):
-        # gets id of user entry matching
-        self.__dbReq("SELECT id FROM users WHERE uw_id=%(uw_id)s") % {'uw_id': str(old_uw_id)}
+
+        # TODO: I'm not sure how this works (Cody) Please message me on Slack to tell me what the intended update would be.
         # if id is found update user entry
-        if len(cur.fetchall()) == 1:
-            id = cur.fetchall()[0]
+        if self.user_exists(card_id, uw_id, uw_netid):  # user exists
+            # id = cur.fetchall()[0] # gets id of user entry matching
+            # maybe this needs to be id = self.__dbReq("SELECT id FROM users WHERE uw_id=%(uw_id)s") % {'uw_id': str(old_uw_id)}
+            # if we change the method, we can also do cur.fetchone(), if this is what you mean by cur.fetchall()[0]
             self.__dbReq("UPDATE users SET card_id=%(card_id)s, uw_id=%(uw_id)s, uw_netid=%(uw_netid)s, first_name=%(first_name)s, last_name=%(last_name)s WHERE id=%(id)s") % {'card_id': str(card_id), 'uw_id': str(uw_id), 'uw_netid': str(uw_netid), 'first_name': str(firstname), 'last_name': str(last_name), 'id': str(id)}
+            return True
         # error, no id found so no update
         else:
-            pass
+            return False
+
+    def display_all_users(self):
+        return self.__dbReq("SELECT * FROM users;")
 
     # display all users
+    # TODO: is this currently necessary? What will it provide us?
     def display_users():
         table = "<table>"
         self.__dbReq("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='users'")
@@ -110,9 +123,6 @@ class StudentDatabase:
                 table += "<td>" + str(column) + "</td>"
             table += "</tr>"
         return table + "</table>"
-
-    def display_all_users(self):
-        return self.__dbReq("SELECT * FROM users;")
 
     # add membership to uw_id given card_id and type of membership
     # expiration_date is only required if it is a main_door membership
@@ -198,10 +208,18 @@ class StudentDatabase:
 #                         # call write_card_activity()
 #         else:
 #             return 'U FAILED'
+    def test_users_table(self, card_id, uw_id, uw_netid, first_name, last_name):
+        print("****USER EXISTS?****")
+        print(student.user_exists(card_id, uw_id, uw_netid))  # check if student exists
+        print("****ADDING USER****")
+        student.add_user(card_id, uw_id, uw_netid, first_name, last_name)
+        print("****REMOVING USER****")
+        student.remove_user("1234512341", "1234512341", "1234512341")
+
+# pprint.pprint(student.display_all_users())
 
 
 student = StudentDatabase("localhost", "postgres", "postgres", "1234")
-# print(student.get_init())
-# print(student.user_exists("1234234", "129834901", "129834901"))
-# pprint.pprint(student.display_all_users())
-# student.add_user("1234512341", "12345123", "4313123", "aaron3.0", "aaron30")
+print("****INITIALIZATION****")
+print(student.get_init())
+student.test_users_table("1234512341", "1234512341", "1234512341", "aaron test", "aaron test 2")
