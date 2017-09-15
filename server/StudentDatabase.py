@@ -16,7 +16,7 @@ import pprint
 
 
 class StudentDatabase:
-    def __init__(self, host, db_name, user, password, port):
+    def __init__(self, host, db_name, user, password, port=5432):
         # TODO: add password field to connection after successful database connection
         self.host = host
         self.db_name = db_name
@@ -25,12 +25,12 @@ class StudentDatabase:
         self.port = port
 
         try:
+            # TODO: add password field
             # connect to database makerspace
-            #TODO: add password field
             self.conn = psycopg2.connect("host={} dbname={} user={} port={}".format(self.host, self.db_name, self.user, self.port))
             # open a cursor to perform database operations
         except:
-            print("I am unable to connect to the database. \n Please supply parameters in this format: StudentDatabase.StudentDatabase(self, host, db_name, user, password)")
+            print("ERROR: I am unable to connect to the database. \n Please supply parameters in this format: StudentDatabase.StudentDatabase(self, host, db_name, user, password)")
 
     def __dbReq(self, stringReq):
         """
@@ -39,31 +39,36 @@ class StudentDatabase:
         # TODO: Add exception handling, do some logging
         try:
             cur = self.conn.cursor()
-            print("Request made!")
-            result = cur.execute(stringReq)
+            cur.execute(stringReq)
+            try:
+                result = self.cur.fetchall()  # if not a fetch operation, this will fail.
+            except:
+                result = None
+                pass
             self.conn.commit()
+            print("Request made!")
             cur.close()
             return result
         except Exception as e:
             print(e)
 
     def get_init(self):
-        return "{} {} {} {}".format(self.host, self.db_name, self.password, self.user)
+        return "Parameters for database connection are: host={} db_name={} password={} user={} port={}".format(self.host, self.db_name, self.password, self.user, self.port)
 
     def user_exists(self, card_id, uw_id, uw_netid):
-        # cur = self.conn.cursor()
         user_exists = self.__dbReq('SELECT * FROM users WHERE card_id=\'{}\' OR uw_id=\'{}\' OR uw_netid=\'{}\''.format(str(card_id), str(uw_id), str(uw_netid)))
-        return user_exists is not None # if true then user exists
-
-        #user_exists = cur.description[0][2]
+        print(user_exists)
+        return bool(user_exists)  # if true then user exists
 
     def add_user(self, card_id, uw_id, uw_netid, first_name, last_name):
         # searches table for existing users with any matching unique inputs, i.e. duplicates
         try:
             if not self.user_exists(card_id, uw_id, uw_netid):  # user does not exist
                 print("didn't find user in database! now inserting user into database")
-                request = "INSERT INTO users (card_id, uw_id, uw_netid, first_name, last_name) VALUES(\'{}\', \'{}\', \'{}\', \'{}\', \'{}\'".format(str(card_id), str(uw_id), str(uw_netid), str(first_name), str(last_name))
+                request = "INSERT INTO users (card_id, uw_id, uw_netid, first_name, last_name) VALUES(\'{}\', \'{}\', \'{}\', \'{}\', \'{}\')".format(str(card_id), str(uw_id), str(uw_netid), str(first_name), str(last_name))
                 self.__dbReq(request)
+            else:
+                print("user exists!")
         except Exception as e:
             print(e)
 
@@ -107,7 +112,7 @@ class StudentDatabase:
         return table + "</table>"
 
     def display_all_users(self):
-        self.__dbReq("SELECT * FROM users;")
+        return self.__dbReq("SELECT * FROM users;")
 
     # add membership to uw_id given card_id and type of membership
     # expiration_date is only required if it is a main_door membership
@@ -151,7 +156,7 @@ class StudentDatabase:
 
     # writes to table card_activity
     def write_card_activity(self, uw_id, type, date):
-    #def write_card_activity(uw_id, type, date, pass='0'): doesn't work for Cody & Chuan
+    # def write_card_activity(uw_id, type, date, pass='0'): doesn't work for Cody & Chuan
         pass
 
     # optional: show which equipment types a user is trained on
@@ -195,6 +200,8 @@ class StudentDatabase:
 #             return 'U FAILED'
 
 
-student = StudentDatabase("localhost", "postgres", "postgres", "1234", "2345")
-print(student.user_exists("16808028", "16808028", "16808028"))
-# student.add_user("1234", "1234", "431")
+student = StudentDatabase("localhost", "postgres", "postgres", "1234")
+# print(student.get_init())
+# print(student.user_exists("1234234", "129834901", "129834901"))
+# pprint.pprint(student.display_all_users())
+# student.add_user("1234512341", "12345123", "4313123", "aaron3.0", "aaron30")
