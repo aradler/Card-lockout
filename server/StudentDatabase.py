@@ -124,9 +124,9 @@ class StudentDatabase:
             table += "</tr>"
         return table + "</table>"
 
-    def membership_exists(self, uw_id):
+    def membership_exists(self, uw_id, type):
         # TODO: decide if this needs to have the TYPE column attached to it, so that we can verify info for what membership has access to.
-        membership_exists = self.__dbReq("SELECT * FROM memberships WHERE uw_id=\'{}\'".format(str(uw_id)))
+        membership_exists = self.__dbReq("SELECT * FROM memberships WHERE uw_id=\'{}\' AND type=\'{}\'".format(str(uw_id), str(type)))
         print(membership_exists)
         return bool(membership_exists)  # if true then membership exists
 
@@ -135,7 +135,7 @@ class StudentDatabase:
     def add_membership(self, uw_id, type, join_date, expiration_date):
         # searches table for existing memberships with any matching unique inputs, i.e. duplicates
         try:
-            if not self.membership_exists(uw_id):  # membership does not exist
+            if not self.membership_exists(uw_id, type):  # membership does not exist
                 print("didn't find membership in database! now inserting membership into database")
                 print(join_date)
                 request = "INSERT INTO memberships (uw_id, type, join_date, expiration_date) VALUES(\'{}\', \'{}\', \'{}\', \'{}\')".format(str(uw_id), str(type), str(join_date), str(expiration_date))
@@ -148,12 +148,32 @@ class StudentDatabase:
             print(e)
 
     # display all memberships and allow removing one by selecting one
-    def remove_membership(self, card_id, type, expiration_date):
-        pass
+    def remove_membership(self, uw_id, type, join_date, expiration_date):
+        try:
+            if self.membership_exists(uw_id, type):  # membership does not exist
+                print("found membership in database! now removing membership from database")
+                print(join_date)
+                # these logical operators probably need to be changed.
+                request = "DELETE FROM memberships WHERE uw_id=\'{}\' AND type=\'{}\' OR join_date=\'{}\' OR expiration_date=\'{}\'".format(str(uw_id), str(type), str(join_date), str(expiration_date))
+                self.__dbReq(request)
+                return True
+            else:
+                print("membership doesn't exists... error")
+                return False
+        except Exception as e:
+            print(e)
 
     # edit details of a membership
-    def edit_membership(self, card_id, type, expiration_date):
-        pass
+    def edit_membership(self, id, uw_id, type, join_date, expiration_date):
+        # if id is found update user entry exactly
+        if self.membership_exists(uw_id, type):  # user exists
+            request = "UPDATE users SET uw_id=\'{}\', type=\'{}\', join_date=\'{}\', expiration_date=\'{}\' WHERE id=\'{}\'".format(str(uw_id), str(type), str(join_date), str(expiration_date))
+            self.__dbReq(request)
+            return True
+        # error, no id found so no update
+        else:
+            print("error, no id found so no update")
+            return False
 
     # ban membership of uw_id given card_id and type of membership
     # start_date is from time of form submission and end_date set by submitter
@@ -234,11 +254,14 @@ class StudentDatabase:
         print("****REMOVING USER****")
         student.remove_user("1234512341", "1234512341", "1234512341")
 
-    def test_memberships_table(self, uw_id, type, join_date, expiration_date):
+    def test_memberships_table(self, id, uw_id, type, join_date, expiration_date):
         print("****MEMBERSHIP EXISTS?****")
-        print(student.membership_exists(uw_id))  # check if membership exists
+        print(student.membership_exists(uw_id, type))  # check if membership exists
         print("****ADDING MEMBERSHIP****")
         student.add_membership(uw_id, type, join_date, expiration_date)
+        # student.remove_membership(uw_id, type, join_date, expiration_date)
+        print("****EDITITNG MEMBERSHIP****")
+        student.edit_membership(id, uw_id, type, join_date, expiration_date)
         # print("****REMOVING MEMBERSHIP****")
         # student.remove_user(, "1234512341", "1234512341")
 
@@ -255,5 +278,4 @@ student = StudentDatabase("localhost", "postgres", "postgres", "1234")
 # Testing for test_memberships_table
 join_date = datetime.date.today().strftime("%Y%m%d")  # changed to this to test, but date can be anything
 
-# ahh I think I got this. uw_id references the users table which allows us to do a lookup of what they can do somehow.
-student.test_memberships_table("12345", "laser_cutter", join_date, datetime.date(2019, 3, 3).strftime("%Y%m%d"))
+student.test_memberships_table("34" ,"16808635", "main_door", "1494610320", "1494610320")
