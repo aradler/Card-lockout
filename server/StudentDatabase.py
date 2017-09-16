@@ -3,6 +3,7 @@ import json
 import sql
 import psycopg2
 import time
+import datetime
 import pprint
 
 
@@ -86,32 +87,30 @@ class StudentDatabase:
             return True
         # error, no user found matching inputs
         else:
-            print("didn't find user in database!")
+            print("didn\'t find user in database!")
             return False
 
     # editing user entry by form input
-    def edit_user(self, old_uw_id, card_id, uw_id, uw_netid, first_name, last_name):
-
-        # TODO: I'm not sure how this works (Cody) Please message me on Slack to tell me what the intended update would be.
-        # if id is found update user entry
+    def edit_user(self, id, card_id, uw_id, uw_netid, first_name, last_name):
+        # if id is found update user entry exactly
         if self.user_exists(card_id, uw_id, uw_netid):  # user exists
-            # id = cur.fetchall()[0] # gets id of user entry matching
-            # maybe this needs to be id = self.__dbReq("SELECT id FROM users WHERE uw_id=%(uw_id)s") % {'uw_id': str(old_uw_id)}
-            # if we change the method, we can also do cur.fetchone(), if this is what you mean by cur.fetchall()[0]
-            self.__dbReq("UPDATE users SET card_id=%(card_id)s, uw_id=%(uw_id)s, uw_netid=%(uw_netid)s, first_name=%(first_name)s, last_name=%(last_name)s WHERE id=%(id)s") % {'card_id': str(card_id), 'uw_id': str(uw_id), 'uw_netid': str(uw_netid), 'first_name': str(firstname), 'last_name': str(last_name), 'id': str(id)}
+            self.__dbReq("UPDATE users SET card_id=\'{}\', uw_id=\'{}\', uw_netid=\'{}\', first_name=\'{}\', last_name=\'{}\' WHERE id=\'{}\'".format(str(card_id), str(uw_id), str(uw_netid), str(first_name), str(last_name)))
             return True
         # error, no id found so no update
         else:
+            print("error, no id found so no update")
             return False
 
     def display_all_users(self):
         return self.__dbReq("SELECT * FROM users;")
 
+    def display_user_no_html(self, id=None, card_id=None, uw_id=None, uw_netid=None, first_name=None, last_name=None)
+
     # display all users
     # TODO: is this currently necessary? What will it provide us?
-    def display_users():
+    def display_users(self):
         table = "<table>"
-        self.__dbReq("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='users'")
+        self.__dbReq("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME=\'users\'")
         header = cur.fetchall()
         for column in header:
             table += "<th>" + str(column[3]) + "</th>"
@@ -124,58 +123,76 @@ class StudentDatabase:
             table += "</tr>"
         return table + "</table>"
 
+    def membership_exists(self, card_id):
+        membership_exists = self.__dbReq("SELECT * FROM memberships WHERE card_id=\'{}\'".format(str(card_id))
+        print(membership_exists)
+        return bool(membership_exists)  # if true then membership exists
+
     # add membership to uw_id given card_id and type of membership
     # expiration_date is only required if it is a main_door membership
-    def add_membership(card_id, type, expiration_date):
-        pass
+    def add_membership(self, card_id, type, expiration_date):
+        # searches table for existing memberships with any matching unique inputs, i.e. duplicates
+        try:
+            if not self.membership_exists(card_id):  # membership does not exist
+                print("didn't find membership in database! now inserting membership into database")
+                join_date = datetime.date.today()
+                print(join_date)
+                request = "INSERT INTO memberships (card_id, type, join_date, expiration_date) VALUES(\'{}\', \'{}\', \'{}\', \'{}\')".format(str(card_id), str(type), str(join_date), str(expiration_date))
+                self.__dbReq(request)
+                return True
+            else:
+                print("membership already exists!")
+                return False
+        except Exception as e:
+            print(e)
 
     # display all memberships and allow removing one by selecting one
-    def remove_membership(card_id, type, expiration_date):
+    def remove_membership(self, card_id, type, expiration_date):
         pass
 
     # edit details of a membership
-    def edit_membership(card_id, type, expiration_date):
+    def edit_membership(self, card_id, type, expiration_date):
         pass
 
     # ban membership of uw_id given card_id and type of membership
     # start_date is from time of form submission and end_date set by submitter
-    def ban_card(card_id, type, start_date, end_date):
+    def ban_card(self, card_id, type, start_date, end_date):
         pass
 
-    # display list of all bans and allow unbanning by selecting one
-    def unban_card(card_id, type, start_date, end_date):
-        pass
-
-    def add_card_reader():
-        pass
-
-    def edit_card_reader():
-        pass
-
-    def remove_card_reader():
-        pass
-
-    def add_equipment_groups():
-        pass
-
-    def edit_equipment_groups():
-        pass
-
-    def remove_equipment_groups():
-        pass
-
-    # writes to table card_activity
-    def write_card_activity(self, uw_id, type, date):
-    # def write_card_activity(uw_id, type, date, pass='0'): doesn't work for Cody & Chuan
-        pass
-
-    # optional: show which equipment types a user is trained on
-    def show_trained_equipment(uw_id):
-        pass
-
-    # optional: show all users trained on an equipment type
-    def show_trained_users(type):
-        pass
+    # # display list of all bans and allow unbanning by selecting one
+    # def unban_card(self, card_id, type, start_date, end_date):
+    #     pass
+    #
+    # def add_card_reader(self):
+    #     pass
+    #
+    # def edit_card_reader(self):
+    #     pass
+    #
+    # def remove_card_reader(self):
+    #     pass
+    #
+    # def add_equipment_groups(self):
+    #     pass
+    #
+    # def edit_equipment_groups(self):
+    #     pass
+    #
+    # def remove_equipment_groups(self):
+    #     pass
+    #
+    # # writes to table card_activity
+    # def write_card_activity(self, uw_id, type, date):
+    # # def write_card_activity(uw_id, type, date, pass='0'): doesn't work for Cody & Chuan
+    #     pass
+    #
+    # # optional: show which equipment types a user is trained on
+    # def show_trained_equipment(uw_id):
+    #     pass
+    #
+    # # optional: show all users trained on an equipment type
+    # def show_trained_users(type):
+    #     pass
 
 #
 #
@@ -216,10 +233,20 @@ class StudentDatabase:
         print("****REMOVING USER****")
         student.remove_user("1234512341", "1234512341", "1234512341")
 
+    def test_memberships_table(self, card_id, uw_id, uw_netid, first_name, last_name):
+        print("****USER EXISTS?****")
+        print(student.user_exists(card_id, uw_id, uw_netid))  # check if student exists
+        print("****ADDING USER****")
+        student.add_user(card_id, uw_id, uw_netid, first_name, last_name)
+        print("****REMOVING USER****")
+        student.remove_user("1234512341", "1234512341", "1234512341")
+
 # pprint.pprint(student.display_all_users())
 
 
 student = StudentDatabase("localhost", "postgres", "postgres", "1234")
-print("****INITIALIZATION****")
-print(student.get_init())
-student.test_users_table("1234512341", "1234512341", "1234512341", "aaron test", "aaron test 2")
+
+# Testing for test_users_table
+# print("****INITIALIZATION****")
+# print(student.get_init())
+# student.test_users_table("1234512341", "1234512341", "1234512341", "aaron test", "aaron test 2")
