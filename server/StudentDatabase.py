@@ -1,10 +1,9 @@
-import yaml
-import json
-import sql
+# import yaml
+# import json
+# import sql
 import psycopg2
-import time
-import datetime
-import pprint
+# import datetime
+# import pprint
 
 
 # # connect to database makerspace
@@ -94,7 +93,7 @@ class StudentDatabase:
     def edit_user(self, id, card_id, uw_id, uw_netid, first_name, last_name):
         # if id is found update user entry exactly
         if self.user_exists(card_id, uw_id, uw_netid):  # user exists
-            self.__dbReq("UPDATE users SET card_id=\'{}\', uw_id=\'{}\', uw_netid=\'{}\', first_name=\'{}\', last_name=\'{}\' WHERE id=\'{}\'".format(str(card_id), str(uw_id), str(uw_netid), str(first_name), str(last_name)))
+            self.__dbReq("UPDATE users SET card_id=\'{}\', uw_id=\'{}\', uw_netid=\'{}\', first_name=\'{}\', last_name=\'{}\' WHERE id=\'{}\'".format(str(card_id), str(uw_id), str(uw_netid), str(first_name), str(last_name), str(id)))
             return True
         # error, no id found so no update
         else:
@@ -177,7 +176,8 @@ class StudentDatabase:
 
     # ban membership of uw_id given card_id and type of membership
     # start_date is from time of form submission and end_date set by submitter
-    def ban_card(self, card_id, type, start_date, end_date):
+    def ban_card(self, uw_id, type, start_date, end_date):
+
         pass
 
     # # display list of all bans and allow unbanning by selecting one
@@ -246,13 +246,17 @@ class StudentDatabase:
 #                         # call write_card_activity()
 #         else:
 #             return 'U FAILED'
-    def test_users_table(self, card_id, uw_id, uw_netid, first_name, last_name):
+    def test_users_table(self, id, card_id, uw_id, uw_netid, first_name, last_name):
         print("****USER EXISTS?****")
         print(student.user_exists(card_id, uw_id, uw_netid))  # check if student exists
         print("****ADDING USER****")
         student.add_user(card_id, uw_id, uw_netid, first_name, last_name)
+        print("****EDITITNG USER****")
+        student.edit_user(id, card_id, uw_id, uw_netid, first_name, last_name) # when edited, we can see that their entry goes to the end of the list
+        print("****DISPLAYING ALL USERS****")
+        student.display_all_users()
         print("****REMOVING USER****")
-        student.remove_user("1234512341", "1234512341", "1234512341")
+        student.remove_user(card_id, uw_id, uw_netid)
 
     def test_memberships_table(self, id, uw_id, type, join_date, expiration_date):
         print("****MEMBERSHIP EXISTS?****")
@@ -271,11 +275,11 @@ class StudentDatabase:
 student = StudentDatabase("localhost", "postgres", "postgres", "1234")
 
 # Testing for test_users_table
-# print("****INITIALIZATION****")
-# print(student.get_init())
-# student.test_users_table("1234512341", "1234512341", "1234512341", "aaron test", "aaron test 2")
+print("****INITIALIZATION****")
+print(student.get_init())
+# must update below line every time run because of id state change.
+student.test_users_table("2", "16808469", "16808469", "chunter6", "CHRISTOPHER J.", "HUNTER")
 
 # Testing for test_memberships_table
-join_date = datetime.date.today().strftime("%Y%m%d")  # changed to this to test, but date can be anything
-
-student.test_memberships_table("34" ,"16808635", "main_door", "1494610320", "1494610320")
+#join_date = datetime.date.today().strftime("%Y%m%d")  # changed to this to test, but date can be anything
+#student.test_memberships_table("34" ,"16808635", "main_door", "1494610320", "1494610320")
