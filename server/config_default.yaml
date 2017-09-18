@@ -1,2 +1,9 @@
 serverAddress: 1.2.3.4
-serverPort: 5555
+serverPort: 5432
+
+db:
+    host: locaohost
+    name: postgres
+    user: postgres
+    pass:
+    port: 5432
