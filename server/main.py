@@ -19,7 +19,14 @@ from StudentDatabase import StudentDatabase
 # create the flask app
 app = Flask( __name__ )
 
-sdb = StudentDatabase( "host", "dbName", "user", "pass" )
+with open( 'config.yaml' ) as f:
+	config = yaml.load( f )
+
+sdb = StudentDatabase(
+	config['db']['host'],
+	config['db']['name'],
+	config['db']['user'],
+	config['db']['pass'] )
 
 
 # a simple hello world route
@@ -119,7 +126,7 @@ def authorizeUser():
 	"""
 	Adds an authorization to a specified user.
 	"""
-	
+
 	return request.path
 
 
@@ -147,7 +154,7 @@ def newUser():
 
 @app.route( '/users/swipe', methods=['GET'] )
 def checkUserAuthorization():
-	return request.path
+	return sdb.membership_exists
 
 
 # run the app if the namespace is main
