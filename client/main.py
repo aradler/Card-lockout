@@ -16,13 +16,19 @@ def runLoop( config ):
 
 		try:
 			res = requestAuthorization( cardNumber, config )
+
+			if res['isAuthorized']:
+				# open the relay here
+				print( "Authorized!" )
+
+			else:
+				print( "Not authorized!" )
+
 		except requests.exceptions.Timeout:
 			print( "Server timeout!" )
 			continue
 
-		if res['isAuthorized']:
-			# open the relay here
-			pass
+
 
 
 def requestAuthorization( cardNumber, config ):
