@@ -15,6 +15,8 @@ import json
 
 from StudentDatabase import StudentDatabase
 
+with open( 'config.yaml' ) as f:
+	config = yaml.load( f )
 
 # create the flask app
 app = Flask( __name__ )
@@ -117,8 +119,8 @@ def deleteUser():
 			request.form['uw_id'],
 			request.form['uw_netid'] )
 		return render_template( "main.html", body="OK" )
-	except:
-		return render_template( "main.html", body="Error adding user" ), 500
+	except Exception as e:
+		return render_template( "main.html", body="Error adding user: " + str( e ) ), 500
 	return request.path
 
 
@@ -155,7 +157,9 @@ def newUser():
 
 @app.route( '/users/swipe', methods=['GET'] )
 def checkUserAuthorization():
-	return sdb.membership_exists
+	uwID = request['uw_id']
+	equipmentType = request['equipment_type']
+	return sdb.membership_exists( uwID, equipmentType )
 
 
 # run the app if the namespace is main
