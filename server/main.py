@@ -114,7 +114,7 @@ def addUser():
 ##################################
 
 @app.route( '/users/swipe', methods=['GET'] )
-def checkUserAuthorization():]
+def checkUserAuthorization():
 	return request.path
 
 
