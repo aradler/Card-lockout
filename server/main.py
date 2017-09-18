@@ -2,6 +2,8 @@
 from flask import Flask
 from flask import request
 from flask import render_template
+from flask import session
+from flask import redirect
 # for reading the config file
 import yaml
 # for generating SQL queries in pure Python
@@ -11,9 +13,13 @@ import psycopg2
 # for generating JSON to send to the client
 import json
 
+from StudentDatabase import StudentDatabase
+
 
 # create the flask app
 app = Flask( __name__ )
+
+sdb = StudentDatabase( "host", "dbName", "user", "pass" )
 
 
 # a simple hello world route
@@ -43,6 +49,13 @@ def login():
 	"""
 	Responds with a web form to login and grants a session on successful login.
 	"""
+	# hard-coded password for now, will migrate out later
+	if request.method == 'GET':
+		pass
+	elif request.method == 'POST':
+		session['login'] = True
+		return redirect( '/users' )
+
 	return render_template(
 		"main.html",
 		title="Login",
@@ -55,8 +68,8 @@ def login():
 @app.route( '/users', methods=['GET'] )
 def users():
 	"""
-	This route will display the list of currently registered users, along with their authorizations, registration
-	dates, and other info.
+	This route will display the list of currently registered users, along with
+	their authorizations, registration dates, and other info.
 	"""
 	return render_template(
 		"main.html",
@@ -68,11 +81,21 @@ def users():
 
 
 @app.route( '/users/add', methods=['POST'] )
-def newUser():
+def addUser():
 	"""
 	Accepts a request to add a user to the database.
 	"""
-	return request.path
+
+	try:
+		sdb.add_user(
+			request.form['card_id'],
+			request.form['uw_id'],
+			request.form['uw_netid'],
+			request.form['first_name'],
+			request.form['last_name'] )
+		return render_template( "main.html", body="OK" )
+	except:
+		return render_template( "main.html", body="Error adding user" ), 500
 
 
 @app.route( '/users/delete', methods=['POST'] )
@@ -80,6 +103,14 @@ def deleteUser():
 	"""
 	Deletes a user from the database.
 	"""
+	try:
+		sdb.remove_user(
+			request.form['card_id'],
+			request.form['uw_id'],
+			request.form['uw_netid'] )
+		return render_template( "main.html", body="OK" )
+	except:
+		return render_template( "main.html", body="Error adding user" ), 500
 	return request.path
 
 
@@ -88,6 +119,7 @@ def authorizeUser():
 	"""
 	Adds an authorization to a specified user.
 	"""
+	
 	return request.path
 
 
@@ -96,7 +128,7 @@ def authorizeUser():
 #########################
 
 @app.route( '/users/new', methods=['GET'] )
-def addUser():
+def newUser():
 	"""
 	Responds with a webform to add a new user.
 	"""
@@ -125,6 +157,8 @@ if __name__ == '__main__':
 
 	# makes your life easier
 	app.debug = True
+	# lol using the flask default secret KEY
+	app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 	# and, run the app
 	app.run( port=config['serverPort'] )
 	# if you get errors, make sure to make a copy of `config_default.yaml` and
