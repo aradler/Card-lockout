@@ -23,10 +23,11 @@ with open( 'config.yaml' ) as f:
 	config = yaml.load( f )
 
 sdb = StudentDatabase(
-	config['db']['host'],
-	config['db']['name'],
-	config['db']['user'],
-	config['db']['pass'] )
+	host=config['db']['host'],
+	db_name=config['db']['name'],
+	user=config['db']['user'],
+	password=config['db']['pass'],
+	port=config['db']['port'] )
 
 
 # a simple hello world route
