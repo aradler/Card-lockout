@@ -1,0 +1,11 @@
+#!/bin/bash
+# create csv file if it doesn't exist
+if [ ! -f ./user_card_info.csv ]; then
+  echo "Full card number, Truncated card number, date and time" > user_card_info.csv
+fi
+
+while :
+do
+  read card_info
+  echo "Full Card Number: $card_info , Truncated Card Number: $(echo $card_info | cut -c5-11), $(date)" >> user_card_info.csv
+done
